@@ -96,6 +96,7 @@ pub struct ExceptionZoo {
     pub value_error: PyObjectRef,
     pub import_error: PyObjectRef,
     pub module_not_found_error: PyObjectRef,
+    pub overflow_error: PyObjectRef,
 }
 
 impl ExceptionZoo {
@@ -138,6 +139,7 @@ impl ExceptionZoo {
         let import_error = create_type("ImportError", &type_type, &exception_type, &dict_type);
         let module_not_found_error =
             create_type("ModuleNotFoundError", &type_type, &import_error, &dict_type);
+        let overflow_error = create_type("OverflowError", &type_type, &exception_type, &dict_type);
 
         ExceptionZoo {
             base_exception_type: base_exception_type,
@@ -155,6 +157,7 @@ impl ExceptionZoo {
             value_error: value_error,
             import_error: import_error,
             module_not_found_error: module_not_found_error,
+            overflow_error: overflow_error,
         }
     }
 }
