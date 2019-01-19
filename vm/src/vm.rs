@@ -122,7 +122,7 @@ impl VirtualMachine {
         self.new_exception(value_error, msg)
     }
 
-    pub fn new_overflow_error (&mut self, msg: String) -> PyObjectRef {
+    pub fn new_overflow_error(&mut self, msg: String) -> PyObjectRef {
         let overflow_error = self.ctx.exceptions.overflow_error.clone();
         self.new_exception(overflow_error, msg)
     }
