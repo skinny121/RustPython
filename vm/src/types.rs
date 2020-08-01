@@ -265,6 +265,16 @@ pub fn create_type(name: &str, type_type: &PyClassRef, base: &PyClassRef) -> PyC
     .expect("Failed to create a new type in internal code.")
 }
 
+pub fn create_type_multiple_bases(
+    name: &str,
+    type_type: &PyClassRef,
+    bases: Vec<PyClassRef>,
+) -> PyClassRef {
+    let dict = PyAttributes::new();
+    objtype::new(type_type.clone(), name, bases[0].clone(), bases, dict)
+        .expect("Failed to create a new type in internal code.")
+}
+
 /// Paritally initialize a struct, ensuring that all fields are
 /// either given values or explicitly left uninitialized
 macro_rules! partially_init {

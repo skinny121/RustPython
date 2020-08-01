@@ -56,7 +56,7 @@ from _io import *
 OpenWrapper = _io.open # for compatibility with _pyio
 
 # Pretend this exception was created here.
-#UnsupportedOperation.__module__ = "io"
+UnsupportedOperation.__module__ = "io"
 
 # for seek()
 SEEK_SET = 0

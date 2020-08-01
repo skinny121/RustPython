@@ -23,6 +23,7 @@ use crate::obj::objtype::{self, PyClassRef};
 use crate::pyobject::{
     BufferProtocol, Either, PyObjectRef, PyRef, PyResult, PyValue, TryFromObject,
 };
+use crate::types::create_type_multiple_bases;
 use crate::vm::VirtualMachine;
 
 fn byte_count(bytes: OptionalOption<i64>) -> i64 {
@@ -37,6 +38,11 @@ fn os_err(vm: &VirtualMachine, err: io::Error) -> PyBaseExceptionRef {
     {
         vm.new_os_error(err.to_string())
     }
+}
+
+fn new_unsupported_operation(vm: &VirtualMachine, msg: String) -> PyBaseExceptionRef {
+    let unsupported_operation = vm.class("_io", "UnsupportedOperation");
+    vm.new_exception_msg(unsupported_operation, msg)
 }
 
 const DEFAULT_BUFFER_SIZE: usize = 8 * 1024;
@@ -961,8 +967,7 @@ fn text_io_wrapper_read(
     let raw = vm.get_attribute(instance.clone(), "buffer").unwrap();
 
     if !objtype::isinstance(&raw, &buffered_reader_class) {
-        // TODO: this should be io.UnsupportedOperation error which derives both from ValueError *and* OSError
-        return Err(vm.new_value_error("not readable".to_owned()));
+        return Err(new_unsupported_operation(vm, "not readable".to_owned()));
     }
 
     let bytes = vm.call_method(
@@ -992,8 +997,7 @@ fn text_io_wrapper_write(
     let raw = vm.get_attribute(instance.clone(), "buffer").unwrap();
 
     if !objtype::isinstance(&raw, &buffered_writer_class) {
-        // TODO: this should be io.UnsupportedOperation error which derives from ValueError and OSError
-        return Err(vm.new_value_error("not writable".to_owned()));
+        return Err(new_unsupported_operation(vm, "not writable".to_owned()));
     }
 
     let bytes = obj.as_str().to_owned().into_bytes();
@@ -1020,8 +1024,7 @@ fn text_io_wrapper_readline(
     let raw = vm.get_attribute(instance.clone(), "buffer").unwrap();
 
     if !objtype::isinstance(&raw, &buffered_reader_class) {
-        // TODO: this should be io.UnsupportedOperation error which derives both from ValueError *and* OSError
-        return Err(vm.new_value_error("not readable".to_owned()));
+        return Err(new_unsupported_operation(vm, "not readable".to_owned()));
     }
 
     let bytes = vm.call_method(
@@ -1165,8 +1168,8 @@ pub fn io_open(
     // Construct a FileIO (subclass of RawIOBase)
     // This is subsequently consumed by a Buffered Class.
     let file_io_class = vm.get_attribute(io_module.clone(), "FileIO").map_err(|_| {
-        // TODO: UnsupportedOperation here
-        vm.new_os_error(
+        new_unsupported_operation(
+            vm,
             "Couldn't get FileIO, io.open likely isn't supported on your platform".to_owned(),
         )
     })?;
@@ -1329,6 +1332,15 @@ pub fn make_module(vm: &VirtualMachine) -> PyObjectRef {
         "close" => ctx.new_method(PyBytesIORef::close),
     });
 
+    let unsupported_operation = create_type_multiple_bases(
+        "UnsupportedOperation",
+        &ctx.type_type(),
+        vec![
+            ctx.exceptions.os_error.clone(),
+            ctx.exceptions.value_error.clone(),
+        ],
+    );
+
     let module = py_module!(vm, "_io", {
         "open" => ctx.new_function(io_open_wrapper),
         "open_code" => ctx.new_function(io_open_code),
@@ -1341,6 +1353,7 @@ pub fn make_module(vm: &VirtualMachine) -> PyObjectRef {
         "TextIOWrapper" => text_io_wrapper,
         "StringIO" => string_io,
         "BytesIO" => bytes_io,
+        "UnsupportedOperation" => unsupported_operation,
         "DEFAULT_BUFFER_SIZE" => ctx.new_int(8 * 1024),
     });
 
