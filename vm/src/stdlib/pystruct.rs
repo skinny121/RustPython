@@ -289,20 +289,26 @@ mod _struct {
             }
             buffer_len - (-offset as usize)
         } else {
-            if offset as usize >= buffer_len {
+            let offset = offset as usize;
+            let (op, op_action) = if is_pack {
+                ("pack_into", "packing")
+            } else {
+                ("unpack_from", "unpacking")
+            };
+            if offset >= buffer_len {
                 let msg = format!(
                     "{op} requires a buffer of at least {required} bytes for {op_action} {needed} \
                     bytes at offset {offset} (actual buffer size is {buffer_len})",
-                    op = if is_pack { "pack_into" } else { "unpack_from" },
-                    op_action = if is_pack { "packing" } else { "unpacking" },
-                    required = offset + buffer_len as isize,
+                    op = op,
+                    op_action = op_action,
+                    required = offset + buffer_len,
                     needed = needed,
                     offset = offset,
                     buffer_len = buffer_len
                 );
                 return Err(new_struct_error(vm, msg));
             }
-            offset as usize
+            offset
         };
 
         if (buffer_len - offset_from_start) < needed {
