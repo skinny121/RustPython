@@ -39,31 +39,25 @@ mod decl {
         }
     }
 
-    fn unhexlify_internal(hex_bytes: &[u8], vm: &VirtualMachine) -> PyResult<Vec<u8>> {
-        if hex_bytes.len() % 2 != 0 {
-            return Err(vm.new_value_error("Odd-length string".to_owned()));
-        }
-
-        let mut unhex = Vec::<u8>::with_capacity(hex_bytes.len() / 2);
-        for (n1, n2) in hex_bytes.iter().tuples() {
-            if let (Some(n1), Some(n2)) = (unhex_nibble(*n1), unhex_nibble(*n2)) {
-                unhex.push(n1 << 4 | n2);
-            } else {
-                return Err(vm.new_value_error("Non-hexadecimal digit found".to_owned()));
+    #[pyfunction(name = "a2b_hex")]
+    #[pyfunction]
+    fn unhexlify(data: PyAsciiBytesLike, vm: &VirtualMachine) -> PyResult<Vec<u8>> {
+        data.with_ref(|hex_bytes| {
+            if hex_bytes.len() % 2 != 0 {
+                return Err(vm.new_value_error("Odd-length string".to_owned()));
             }
-        }
 
-        Ok(unhex)
-    }
+            let mut unhex = Vec::<u8>::with_capacity(hex_bytes.len() / 2);
+            for (n1, n2) in hex_bytes.iter().tuples() {
+                if let (Some(n1), Some(n2)) = (unhex_nibble(*n1), unhex_nibble(*n2)) {
+                    unhex.push(n1 << 4 | n2);
+                } else {
+                    return Err(vm.new_value_error("Non-hexadecimal digit found".to_owned()));
+                }
+            }
 
-    #[pyfunction]
-    fn a2b_hex(data: PyAsciiBytesLike, vm: &VirtualMachine) -> PyResult<Vec<u8>> {
-        data.with_ref(|hex_bytes| unhexlify_internal(hex_bytes, vm))
-    }
-
-    #[pyfunction]
-    fn unhexlify(data: PyBytesLike, vm: &VirtualMachine) -> PyResult<Vec<u8>> {
-        data.with_ref(|hex_bytes| unhexlify_internal(hex_bytes, vm))
+            Ok(unhex)
+        })
     }
 
     #[pyfunction]
