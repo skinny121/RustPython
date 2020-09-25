@@ -17,6 +17,6 @@ jobs:
         uses: rhysd/github-action-benchmark@v1
         with:
           name: RustPython Benchmark
-          tool: 'rust'
+          tool: 'cargo'
           output-file-path: output.txt
           auto-push: true
