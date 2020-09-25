@@ -20,3 +20,4 @@ jobs:
           tool: 'cargo'
           output-file-path: output.txt
           auto-push: true
+          github_token: ${{ secrets.GITHUB_TOKEN }}
