@@ -2,6 +2,8 @@ on:
   push:
     branches: [ci-test]
 
+name: Benchmark
+
 jobs:
   benchmark:
     name: Collect performance data
@@ -12,13 +14,31 @@ jobs:
         with:
           toolchain: nightly
           override: true
-      - name: Run benchmark
+      - name: Run benchmarks
         run: cargo +nightly bench | tee output.txt
+      - name: Checkout previouse performance data
+        env:
+          SSHKEY: ${{ secrets.ACTIONS_TESTS_DATA_DEPLOY_KEY }}
+        run:
+          echo "$SSHKEY" >~/github_key
+          chmod 600 ~/github_key
+          export GIT_SSH_COMMAND="ssh -i ~/github_key"
+
+          git clone git@github.com:skinny121/rustpython.github.io.git website
       - name: Store benchmark result
         uses: rhysd/github-action-benchmark@v1
         with:
-          name: RustPython Benchmark
+          name: RustPython Benchmarks
           tool: 'cargo'
           output-file-path: output.txt
-          auto-push: true
-          github-token: ${{ secrets.GITHUB_TOKEN }}
+          external-data-json-path: website/_data/perf_results.json
+      - name: Upload performance data to the website
+        env:
+          GITHUB_ACTOR: ${{ github.actor }}
+        run: |
+          export GIT_SSH_COMMAND="ssh -i ~/github_key"
+
+          cd website
+          git add ./_data/perf_results.json
+          git -c user.name="Github Actions" -c user.email="actions@github.com" commit -m "Update regression test results" --author="$GITHUB_ACTOR"
+          git push
