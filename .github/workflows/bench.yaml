@@ -33,5 +33,5 @@ jobs:
         run: |
           cd website
           git add ./_data/perf_results.json
-          git -c user.name="Github Actions" -c user.email="actions@github.com" commit -m "Update regression test results"
+          git -c user.name="Github Actions" -c user.email="actions@github.com" commit -m "Update performance data"
           git push
