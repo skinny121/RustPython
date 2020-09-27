@@ -30,10 +30,8 @@ jobs:
           output-file-path: output.txt
           external-data-json-path: website/_data/perf_results.json
       - name: Upload performance data to the website
-        env:
-          GITHUB_ACTOR: ${{ github.actor }}
         run: |
           cd website
           git add ./_data/perf_results.json
-          git -c user.name="Github Actions" -c user.email="actions@github.com" commit -m "Update regression test results" --author="$GITHUB_ACTOR"
+          git -c user.name="Github Actions" -c user.email="actions@github.com" commit -m "Update regression test results"
           git push
